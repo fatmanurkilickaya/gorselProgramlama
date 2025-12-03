@@ -1,0 +1,136 @@
+using System;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Windows.Forms;
+
+namespace SpellingBeeGame
+{
+    public class HexagonButton : Control
+    {
+        private SplitContainer splitContainer1;
+
+        public Color BorderColor { get; set; } = Color.Goldenrod;
+        public Color FillColor { get; set; } = Color.Khaki;
+        public Color HoverColor { get; set; } = Color.Gold;
+
+        private bool _isHovered = false;
+
+        public char Letter { get; set; } = 'A';
+
+        public HexagonButton()
+        {
+            this.Size = new Size(70, 70);
+            this.DoubleBuffered = true;
+            this.Cursor = Cursors.Hand;
+        }
+
+        private GraphicsPath CreateHexagonPath()
+        {
+            int w = this.Width - 1;
+            int h = this.Height - 1;
+
+            // Altıgen noktaları
+            PointF[] pts = new PointF[]
+            {
+                new PointF(w * 0.25f, 0),
+                new PointF(w * 0.75f, 0),
+                new PointF(w,       h * 0.5f),
+                new PointF(w * 0.75f, h),
+                new PointF(w * 0.25f, h),
+                new PointF(0,        h * 0.5f)
+            };
+
+            GraphicsPath path = new GraphicsPath();
+            path.AddPolygon(pts);
+            return path;
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            using (var path = CreateHexagonPath())
+            {
+                this.Region = new Region(path);
+            }
+            this.Invalidate();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+            using (var path = CreateHexagonPath())
+            {
+                // Arka plan
+                Color fill = _isHovered ? HoverColor : FillColor;
+                using (var brush = new SolidBrush(fill))
+                {
+                    e.Graphics.FillPath(brush, path);
+                }
+
+                // Kenar çizgisi
+                using (var pen = new Pen(BorderColor, 2))
+                {
+                    e.Graphics.DrawPath(pen, path);
+                }
+            }
+
+            // Ortaya harfi yaz
+            using (var sf = new StringFormat()
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            })
+            using (var brush = new SolidBrush(Color.Black))
+            {
+                e.Graphics.DrawString(
+                    Letter.ToString().ToUpper(),
+                    this.Font,
+                    brush,
+                    this.ClientRectangle,
+                    sf);
+            }
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            _isHovered = true;
+            Invalidate();
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            _isHovered = false;
+            Invalidate();
+        }
+
+        // Tıklama olayını dışarıya ilet (normal kontrol gibi)
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            this.OnClick(EventArgs.Empty);
+        }
+
+        private void InitializeComponent()
+        {
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.Size = new System.Drawing.Size(150, 100);
+            this.splitContainer1.TabIndex = 0;
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
+            this.ResumeLayout(false);
+
+        }
+    }
+}
